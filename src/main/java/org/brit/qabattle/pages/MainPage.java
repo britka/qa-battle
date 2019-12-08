@@ -1,20 +1,31 @@
 package org.brit.qabattle.pages;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.SelenideElement;
-import sun.applet.Main;
+import org.brit.qabattle.pages.menus.ArticlesToReadMenu;
+import org.brit.qabattle.pages.menus.SavedArticlesMenu;
+import org.brit.qabattle.pages.userprofile.UserProfileSettingsPage;
+
+import java.util.logging.Logger;
 
 import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.$$;
 
 /**
  * @author sbrit
  */
 public class MainPage {
-    private SelenideElement mainContainer = $("#mainContainer");
-    private SelenideElement topLevelClientsButton = $$("button").find(Condition.exactText("Top level clients"));
+    protected static Logger logger = Logger.getLogger(MainPage.class.getName());
+    public ArticlesToReadMenu articlesToReadMenu() {
+        logger.info("Get article to read menu");
+        return new ArticlesToReadMenu();
+    }
 
-    public MainMenu menu(){
-        return new MainMenu();
+    public SavedArticlesMenu savedArticlesMenu() {
+        logger.info("Get saved articles menu");
+        return new SavedArticlesMenu();
+    }
+
+    public UserProfileSettingsPage userProfile() {
+        logger.info("Go to user info section");
+        $("#avatarContainer img").click();
+        return new UserProfileSettingsPage();
     }
 }

@@ -5,9 +5,10 @@ import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.util.HttpMessageContents;
 import net.lightbody.bmp.util.HttpMessageInfo;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,8 +21,13 @@ import java.util.Set;
 public class FileDownloaderResponseFilter implements ResponseFilter {
 
     private Set<String> contentTypes = new HashSet<String>();
-    private File tempDir = new File(System.getProperty("user.dir") + "\\" + Configuration.reportsFolder);
+    private File tempDir = new File(System.getProperty("user.dir") + "\\" + Configuration.reportsFolder + "\\" + RandomStringUtils.randomAlphabetic(6));
     private File tempFile = null;
+
+    public FileDownloaderResponseFilter() {
+        tempDir.mkdir();
+        tempDir.deleteOnExit();
+    }
 
     public static FileDownloaderResponseFilter withContent(String contentType) {
         return new FileDownloaderResponseFilter().addContentType(contentType);
@@ -48,13 +54,12 @@ public class FileDownloaderResponseFilter implements ResponseFilter {
     public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
         String contentType = response.headers().get("Content-Type");
         if (contentTypes.contains(contentType)) {
+            String uri = messageInfo.getOriginalRequest().getUri();
+            String fileName = uri.substring(uri.lastIndexOf('/'));
+            tempFile = new File(tempDir, fileName);
+            tempFile.deleteOnExit();
             try {
-                String postfix = contentType.substring(contentType.indexOf('/') + 1);
-                tempFile = File.createTempFile("downloaded", "." + postfix, tempDir);
-                tempFile.deleteOnExit();
-                FileOutputStream outputStream = new FileOutputStream(tempFile);
-                outputStream.write(contents.getBinaryContents());
-                outputStream.close();
+                FileUtils.write(tempFile, contents.getTextContents(), contents.getCharset());
             } catch (IOException e) {
                 e.printStackTrace();
             }
